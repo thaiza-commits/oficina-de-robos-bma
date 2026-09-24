@@ -1,10 +1,18 @@
-Banco Central - série 1178:
+OFICINA DE ROBÔS - BMA FIDC - Links úteis
+
+Repositório da oficina (instalador, código, prompt, slides e apostila):
+https://github.com/thaiza-commits/oficina-de-robos-bma
+
+Instalador para Windows (download direto):
+https://github.com/thaiza-commits/oficina-de-robos-bma/releases/latest/download/Instalador_OficinaRobos_BMA.exe
+
+Banco Central - série 1178 (Selic anualizada base 252):
 https://dadosabertos.bcb.gov.br/dataset/1178-taxa-de-juros---selic-anualizada-base-252
 
-API SGS:
-https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados/ultimos/30?formato=json
+API SGS usada pelo robô (troque as datas; a consulta "ultimos/N" aceita no máximo 20 valores):
+https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados?formato=json&dataInicial=01/08/2026&dataFinal=24/09/2026
 
-Python:
+Python (marque "Add python.exe to PATH" na instalação):
 https://www.python.org/downloads/
 
 Visual Studio Code:
@@ -12,3 +20,13 @@ https://code.visualstudio.com/
 
 GitHub:
 https://github.com/
+
+IAs gratuitas (nunca cole dados de clientes, senhas ou informações internas):
+ChatGPT ........... https://chatgpt.com
+Claude ............ https://claude.ai
+Gemini ............ https://gemini.google.com
+Microsoft Copilot . https://copilot.microsoft.com
+GitHub Copilot .... https://github.com/features/copilot (plano gratuito, no VS Code)
+Perplexity ........ https://www.perplexity.ai
+NotebookLM ........ https://notebooklm.google.com
+Meta AI ........... https://www.meta.ai (também dentro do WhatsApp)

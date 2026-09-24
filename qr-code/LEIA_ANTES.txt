@@ -1,2 +1,6 @@
-Este QR Code aponta para uma URL de exemplo.
-Crie o repositório no GitHub, edite GITHUB_URL em gerar_qrcode.py e execute o arquivo.
+QRCode_GitHub.png aponta para o repositório da oficina:
+https://github.com/thaiza-commits/oficina-de-robos-bma
+
+É o mesmo QR do slide 15 da apresentação. Para apontar para outro endereço,
+edite GITHUB_URL em gerar_qrcode.py e rode:  python gerar_qrcode.py
+(depois substitua a imagem no slide 15).
