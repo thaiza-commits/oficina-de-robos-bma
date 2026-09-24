@@ -1,0 +1,6 @@
+requests>=2.31
+pandas>=2.2
+matplotlib>=3.8
+xlsxwriter>=3.2
+reportlab>=4.1
+qrcode[pil]>=7.4

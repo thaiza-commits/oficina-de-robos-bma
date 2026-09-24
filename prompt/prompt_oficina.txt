@@ -1,0 +1,15 @@
+Crie um programa em Python que consulte a API pública SGS do Banco Central do Brasil e obtenha as últimas 30 observações da série 1178, Selic anualizada base 252.
+
+O programa deve:
+1. Tratar erros de conexão e ausência de dados.
+2. Usar um arquivo CSV de exemplo caso a API esteja indisponível.
+3. Gerar uma planilha Excel formatada com as abas Dados e Resumo.
+4. Inserir no Excel um gráfico da evolução da Selic.
+5. Gerar o gráfico também em PNG.
+6. Criar um resumo executivo com primeiro valor, último valor, maior, menor, média e variação.
+7. Gerar um relatório PDF com os indicadores e o gráfico.
+8. Abrir automaticamente o PDF ao final.
+9. Registrar a execução em um arquivo de log.
+10. Utilizar apenas bibliotecas gratuitas.
+
+Entregue também o requirements.txt e explique como executar no Windows.

@@ -1,0 +1,2 @@
+Este QR Code aponta para uma URL de exemplo.
+Crie o repositório no GitHub, edite GITHUB_URL em gerar_qrcode.py e execute o arquivo.

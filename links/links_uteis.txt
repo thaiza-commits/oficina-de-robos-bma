@@ -1,0 +1,14 @@
+Banco Central - série 1178:
+https://dadosabertos.bcb.gov.br/dataset/1178-taxa-de-juros---selic-anualizada-base-252
+
+API SGS:
+https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados/ultimos/30?formato=json
+
+Python:
+https://www.python.org/downloads/
+
+Visual Studio Code:
+https://code.visualstudio.com/
+
+GitHub:
+https://github.com/
