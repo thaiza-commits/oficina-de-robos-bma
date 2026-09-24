@@ -94,20 +94,20 @@ c.setFillColor(LIGHT)
 c.roundRect(38, 100, w - 76, 135, 8, fill=1, stroke=0)
 c.setFillColor(NAVY)
 c.setFont("Helvetica-Bold", 13)
-c.drawString(52, 214, "Prompt utilizado")
+c.drawString(52, 214, "Prompt resumido (slide 06)")
 c.setFont("Helvetica", 9.5)
 prompt = [
-    "Crie um programa em Python que consulte a API pública do Banco Central do Brasil (SGS) e obtenha a",
-    "série 1178 (Selic anualizada base 252) no período escolhido - por padrão, os últimos 12 meses. O",
-    "programa deve tratar erros e usar contingência se a internet falhar, gerar um painel visual em HTML",
-    "com gráficos e indicadores, um Excel com as abas Dados, Resumo e Mudanças, um relatório PDF,",
-    "registrar a execução em log e usar só bibliotecas gratuitas.",
+    "Crie um programa em Python que consulte a API SGS do Banco Central (série 1178, Selic) com",
+    "dataInicial e dataFinal, no período escolhido (padrão: últimos 12 meses). O programa deve: se a",
+    "internet falhar, usar a última consulta salva e avisar em destaque; abrir um painel HTML offline",
+    "com indicadores, gráfico e filtros 1M/3M/12M funcionais; gerar Excel (Dados, Resumo, Mudanças),",
+    "gráfico e PDF nas cores BMA #1B172D e #F37522; ler o período de um parametros.ini e registrar log.",
 ]
 for k, linha in enumerate(prompt):
     c.drawString(52, 196 - k * 14, linha)
 c.setFillColor(ORANGE)
 c.setFont("Helvetica-Bold", 9)
-c.drawString(52, 110, "Prompt completo (mesmo resultado do robô da oficina): prompt/prompt_oficina.txt no repositório.")
+c.drawString(52, 110, "Para o MESMO resultado da demonstração, use o prompt completo: prompt/prompt_oficina.txt (QR Code).")
 
 c.setFillColor(NAVY)
 c.setFont("Helvetica-Bold", 11)

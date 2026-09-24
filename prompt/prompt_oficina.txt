@@ -1,617 +1,312 @@
-OFICINA DE ROBÔS - BMA FIDC
-
-Prompt do Robô Selic (v1.1: painel visual e período parametrizável)
-
-
-
-Como usar: copie o PROMPT COMPLETO (entre as linhas ===) e cole em uma IA
-
-gratuita (ChatGPT, Claude, Gemini, Microsoft Copilot...). Ele descreve o robô
-
-desta oficina em detalhe, para a IA entregar o mesmo resultado: mesmo painel,
-
-mesmos arquivos, abas, gráfico, PDF e mensagens. Se a resposta vier cortada,
-
-peça: "continue de onde parou". Coloque na pasta codigo/ o arquivo
-
-logo_bma_fidc.svg (vem no kit da oficina).
-
-
-
-Nunca cole dados de clientes, senhas ou informações internas numa IA pública.
-
-
-
-Versão curta (a que aparece no slide 06):
-
-  Crie um programa em Python que consulte a API pública do Banco Central do
-
-  Brasil (SGS) e obtenha a série 1178 (Selic anualizada base 252) no período
-
-  escolhido - por padrão, os últimos 12 meses. O programa deve tratar erros e
-
-  usar dados de contingência se a internet falhar, gerar um painel visual em
-
-  HTML com gráficos e indicadores, um Excel com as abas Dados, Resumo e
-
-  Mudanças, um relatório PDF, registrar a execução em log e usar só
-
-  bibliotecas gratuitas.
-
-
-
-======================================================================
-
-PROMPT COMPLETO
-
-======================================================================
-
-Você é um desenvolvedor Python sênior. Crie o "Robô Selic" v1.1.0 da Oficina
-
-de Robôs BMA FIDC seguindo exatamente a especificação abaixo. Entregue o
-
-código completo, sem omitir trechos.
-
-
-
-1. CONTEXTO
-
-Robô de demonstração que consulta a Selic no Banco Central e mostra os
-
-resultados na tela num painel com a identidade visual da BMA FIDC, além de
-
-Excel, gráfico, PDF e log. Ele roda ao vivo numa apresentação: nunca pode
-
-travar nem esconder falhas. Se não conseguir dados ao vivo, usa uma
-
-contingência e AVISA isso claramente.
-
-
-
-2. ESTRUTURA DE PASTAS
-
-Raiz do projeto com: codigo/ (main.py, painel_template.html,
-
-logo_bma_fidc.svg, requirements.txt e os .bat), dados/, output/, logs/ e
-
-parametros.ini. O main.py calcula a raiz como a pasta-pai de codigo/
-
-(Path(__file__).resolve().parent.parent), cria dados/, output/ e logs/ e,
-
-se parametros.ini não existir, cria com o modelo do item 4.
-
-A primeira linha executada (antes de importar pandas e matplotlib) imprime
-
-"Iniciando o Robô Selic... aguarde alguns segundos.".
-
-
-
-3. IDENTIDADE VISUAL (site bmafidc.com.br)
-
-Cores: primária (fundo escuro) #1B172D; azul #2B63DF; azul-escuro #253E8C;
-
-laranja #F37522 (o do logo); texto #202020; fundo cinza #EDEDED.
-
-Fonte do painel: Averta, com alternativas "Segoe UI", system-ui, Arial.
-
-Títulos finos (peso 400) com letras juntas (letter-spacing negativo);
-
-botões e selos com cantos retos, texto em caixa alta e negrito (peso 800).
-
-O logo é codigo/logo_bma_fidc.svg (branco com um detalhe laranja, para fundo
-
-escuro).
-
-
-
-4. PERÍODO PARAMETRIZÁVEL
-
-- Padrão: últimos 12 meses até hoje.
-
-- parametros.ini (configparser, UTF-8), criado com este conteúdo:
-
-    ; Parâmetros do Robô Selic - edite no Bloco de Notas e rode o robô de novo.
-
-    [periodo]
-
-    ; Quantos meses para trás a partir de hoje (usado se as datas abaixo estiverem vazias).
-
-    meses = 12
-
-    ; Ou um período fixo, no formato DD/MM/AAAA (deixe em branco para usar "meses").
-
-    data_inicial =
-
-    data_final =
-
-
-
-    [saida]
-
-    ; O que abrir ao final: painel, pdf, ambos ou nenhum.
-
-    abrir = painel
-
-- Leia o parametros.ini tolerando UTF-8 com ou sem BOM e ANSI (cp1252). Se
-  estiver ilegível ou com valor inválido, registre WARNING e use o padrão;
-  o robô nunca pode parar por causa desse arquivo.
-- Parâmetros de linha de comando (argparse): --meses N, --inicio DD/MM/AAAA,
-
-  --fim DD/MM/AAAA, --perguntar (pergunta as duas datas na tela; ENTER mantém
-
-  o padrão; data inválida pergunta de novo), --offline, --abrir
-
-  {painel,pdf,ambos,nenhum}, --no-open (= --abrir nenhum) e --no-pause.
-
-- Prioridade: --inicio/--fim/--meses > --perguntar > parametros.ini > padrão.
-
-- "N meses atrás" subtrai meses do calendário, ajustando o dia ao fim do mês.
-
-- A data final nunca passa de hoje e a inicial nunca antes de 04/06/1986
-
-  (início da série). Início depois do fim gera ValueError "Período inválido:
-
-  ... (a data inicial deve vir antes da final)". Data mal escrita gera
-
-  ValueError 'Data inválida "x": use DD/MM/AAAA, por exemplo 01/01/2026.'.
-
-  Esses erros aparecem no log só como "Não foi possível rodar: <mensagem>",
-
-  sem rastreamento, e o programa sai com código 1.
-
-- Registre no log: "Período pedido: DD/MM/AAAA a DD/MM/AAAA (<origem>)", onde
-
-  origem é "padrão (12 meses)", "parametros.ini (N meses)", "parametros.ini
-
-  (datas)", "informado na tela", "linha de comando (N meses)" ou "linha de
-
-  comando (datas)".
-
-
-
-5. FONTE DE DADOS
-
-- API SGS, série 1178: GET https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados
-
-  com formato=json, dataInicial=DD/MM/AAAA e dataFinal=DD/MM/AAAA.
-
-- A API aceita no máximo 10 anos por consulta: peça em blocos de até 3.650
-
-  dias e junte as respostas. NÃO use ".../dados/ultimos/N" (limitado a 20
-
-  valores; responde erro 400).
-
-- timeout de 30 segundos e raise_for_status() em cada bloco. Em queda de
-
-
-
-  conexão ou erro 5xx, tente de novo até 3 vezes, esperando 2 s e 4 s, com
-
-
-
-  WARNING "Tentativa N de 3 falhou (<TipoDoErro>). Nova tentativa em X s...";
-
-
-
-  erro 4xx não é repetido.
-
-- Resposta: lista de {"data": "DD/MM/AAAA", "valor": "13.65"}. O valor vem
-
-  com PONTO DECIMAL e sem separador de milhar: só troque "," por "." (para
-
-  aceitar o CSV) e converta; nunca remova o ponto. Converta a data
-
-  (%d/%m/%Y), remova inválidos e datas duplicadas e ordene. Lista vazia ou sem linhas válidas gera ValueError.
-
-- Tente "import truststore; truststore.inject_into_ssl()" no início, dentro de
-
-  try/except ImportError (necessário em redes corporativas com proxy).
-
-
-
-6. CONTINGÊNCIA (falha da consulta ou --offline)
-
-- Toda consulta ao vivo bem-sucedida é ACUMULADA em
-
-  dados/ultima_consulta_selic.csv (junta com o que já existia, remove datas
-
-  duplicadas mantendo a mais nova, ordena; separador ";", decimal ",", datas
-
-  DD/MM/AAAA, utf-8-sig, colunas data;valor).
-
-- Em falha (requests.RequestException, ValueError ou KeyError), registre o
-
-  erro e use: a) o cache, se existir (fonte "Banco Central do Brasil - SGS,
-
-  série 1178 - última consulta salva em DD/MM/AAAA HH:MM", data de
-
-  modificação do arquivo); b) senão, dados/exemplo_selic.csv (fonte "DADOS DE
-
-  EXEMPLO (modo offline) - não usar para decisão"). O exemplo vem no kit com
-
-  251 observações reais de 24/09/2025 a 23/09/2026; se não existir, gere um
-
-  com um ano de dias úteis.
-
-- Recorte os dados offline ao período pedido. Se sobrarem menos de 2 linhas,
-
-  use tudo e avise "ATENÇÃO: o período pedido não está nos dados offline;
-
-  mostrando ... a ...". Se o recorte começar mais de 7 dias depois do início
-
-  pedido ou terminar mais de 7 dias antes do fim, avise "ATENÇÃO: os dados
-
-  offline cobrem só parte do período pedido (... a ...)."
-
-- Na consulta ao vivo a fonte é "Banco Central do Brasil - SGS, série 1178 -
-
-  consulta em DD/MM/AAAA HH:MM".
-
-- Na contingência: WARNING começando por "ATENÇÃO:" no log, selo e faixa
-
-  laranja no painel, fonte em laranja no Excel e faixa laranja no PDF.
-
-
-
-7. INDICADORES
-
-primeiro, último, maior, menor, média, variação em p.p. (último - primeiro),
-
-variação % (p.p. / primeiro x 100; 0 se o primeiro for 0), data inicial,
-
-data final, número de registros e a lista de MUDANÇAS DA TAXA: cada dia em
-
-que o valor difere do dia anterior, com data, valor anterior ("de") e novo
-
-("para") - são as decisões do Copom. Números no padrão brasileiro: 13,65% e
-
--0,25 p.p. (sinal + quando positivo).
-
-
-
-8. PAINEL - output/painel_selic.html (a entrega principal)
-
-Arquivo HTML único e autocontido: CSS e JavaScript embutidos, logo SVG
-
-embutido, SEM bibliotecas externas nem internet (abre offline). Gere a
-
-partir de codigo/painel_template.html trocando __LOGO__ pelo conteúdo do SVG
-
-e __DADOS__ por um JSON com: serie (lista de ["AAAA-MM-DD", valor]), fonte,
-
-ao_vivo (true/false), gerado_em ("DD/MM/AAAA HH:MM") e versao.
-
-O painel tem, de cima para baixo:
-
-- Cabeçalho com fundo #1B172D: logo à esquerda (altura 46 px); à direita um
-
-  selo "DADOS AO VIVO - BANCO CENTRAL" (fundo azul #2B63DF) ou
-
-  "CONTINGÊNCIA" (fundo laranja); título "Painel Selic" em 44 px, peso 400,
-
-  com a palavra "Selic" em laranja e peso 600; subtítulo "DD/MM/AAAA a
-
-  DD/MM/AAAA · série 1178 do Banco Central (Selic anualizada base 252)".
-
-- Na contingência, faixa laranja logo abaixo: "ATENÇÃO: dados de
-
-  contingência, não da consulta ao vivo. Fonte: <fonte>".
-
-- Filtros: o rótulo "Período:", botões 1M, 3M, 6M, 12M e Tudo (o ativo em azul #2B63DF; começa em
-
-  Tudo) e dois campos de data "de" e "até" limitados aos dados. Tudo abaixo
-
-  é recalculado no navegador ao filtrar.
-
-- Seis cartões brancos: Selic atual (cartão escuro #1B172D, "em DD/MM/AAAA"),
-
-  Variação no período (p.p., em azul se caiu e laranja se subiu, com a
-
-  variação % "desde DD/MM/AAAA"), Mudanças da taxa (quantidade, "última em
-
-  DD/MM/AAAA"), Maior, Menor e Média ("N observações").
-
-- Grade em duas colunas (2/3 e 1/3): à esquerda "Evolução da Selic", à
-
-  direita "Mudanças da taxa"; abaixo, ocupando a largura toda, "Média
-
-  mensal". Cada seção é um cartão branco com título (18 px, peso 600) e uma
-
-  legenda cinza de 12 px:
-
-    Evolução da Selic: "% ao ano, base 252. Os pontos laranja marcam as
-
-    mudanças da taxa (decisões do Copom)."
-
-    Mudanças da taxa: "Data em que a nova taxa passou a valer."
-
-    Média mensal: "Média das observações diárias de cada mês (% a.a.). O
-
-    ponto laranja é o mês mais recente."
-
-- Eixos Y dos dois gráficos com números redondos: margem de 15% da
-
-  amplitude (mínimo 0,1) e passo escolhido entre 0,05; 0,1; 0,25; 0,5; 1; 2
-
-  e 5, o primeiro que dê no máximo 6 intervalos.
-
-- "Evolução da Selic": gráfico SVG em degraus (a taxa só muda nas decisões),
-
-  linha azul #2B63DF de 2,5 px com área em degradê azul, grade horizontal
-
-  cinza, eixo Y com duas casas e vírgula, eixo X com meses ("out/25"), ponto
-
-  laranja em cada mudança com o novo valor ao lado (à esquerda perto da borda
-
-  direita), ponto escuro no último dia e dica ao passar o mouse (data e
-
-  valor).
-
-- "Mudanças da taxa": tabela Data | De | Para | Variação, mais recente
-
-  primeiro, cabeçalho escuro #1B172D; abaixo, um cartão cinza (#EDEDED) com
-
-  o rótulo "Há 12 meses (DD/MM/AAAA)", a taxa daquela data em número grande
-
-  (28 px, peso 600) e, embaixo, a diferença "-1,25 p.p. até DD/MM/AAAA" (azul
-
-  se caiu, laranja se subiu). Se a série começar até 10 dias depois da data
-
-  de 12 meses atrás, use o primeiro dia da série.
-
-- "Média mensal": gráfico de pontos ligados por linha (NÃO use barras com
-
-  eixo cortado), azul-escuro #253E8C, último mês em laranja, valor sobre cada
-
-  ponto e eixo Y com grade.
-
-- Rodapé: "Fonte: ... | Gerado em ... pelo Robô Selic v1.1.0 | Oficina de
-
-  Robôs - BMA FIDC".
-
-- Responsivo (6 cartões viram 3 em telas estreitas) e redesenha ao
-
-  redimensionar a janela.
-
-
-
-9. EXCEL - output/selic.xlsx (xlsxwriter pelo pandas.ExcelWriter)
-
-- Aba "Dados": "Data" (dd/mm/yyyy) e "Selic (% a.a.)" (0.00); cabeçalho em
-
-  negrito, branco sobre #1B172D, altura 24; larguras 15 e 18; congelar a
-
-  primeira linha; autofiltro.
-
-- Aba "Resumo": "Indicador" | "Valor" no mesmo estilo e as linhas Primeiro
-
-  valor (% a.a.), Último valor (% a.a.), Maior valor (% a.a.), Menor valor
-
-  (% a.a.), Média (% a.a.) (0.00); Variação (p.p.) (+0.00;-0.00;0.00);
-
-  Variação (%) como fração (+0.00%;-0.00%;0.00%); Mudanças da taxa
-
-  (número). Linha em branco e depois Período ("DD/MM/AAAA a DD/MM/AAAA (N
-
-  registros)"), Fonte (laranja #F37522 e negrito se for contingência) e
-
-  Gerado em. Formate célula a célula (set_column só para largura).
-
-  Gráfico de linha nativo na D2 com os dados da aba Dados: título "Evolução
-
-  da Selic", linha #2B63DF 2,25, eixo X "mm/yy", eixo Y 0.00, sem legenda,
-
-  720x380.
-
-- Aba "Mudanças": Data | De (% a.a.) | Para (% a.a.) | Variação (p.p.), uma
-
-  linha por mudança; sem mudanças, escreva "A taxa não mudou no período.".
-
-
-
-10. GRÁFICO - output/selic.png (matplotlib com matplotlib.use("Agg"))
-
-10 x 5,4 polegadas, 180 dpi; ax.step(where="post") azul #2B63DF 2,4 com
-
-preenchimento azul alpha 0,10; pontos laranja (tamanho 8, borda branca) nas
-
-mudanças com o valor ao lado (até 12 mudanças; à esquerda nos últimos 7% do
-
-período); título "Selic (% a.a.) - DD/MM/AAAA a DD/MM/AAAA" em #1B172D;
-
-datas "%d/%m" até 60 dias, "%m/%y" até 1.100 dias e "%Y" acima; eixo Y com
-
-vírgula; margem de 15% da amplitude (mínimo 0,1); só grade horizontal; sem
-
-bordas superior e direita.
-
-
-
-11. RELATÓRIO PDF - output/resumo_selic.pdf (reportlab, A4, canvas)
-
-Coordenadas em pontos, w, h = A4, origem no canto inferior esquerdo:
-
-- Faixa #1B172D (0, h-110, w, 110). Logo desenhado a partir do SVG em
-
-  (42, h-88) com 118 pt de largura: leia os <path> e <rect>, converta os
-
-  comandos M/L/H/V/C/Z (maiúsculos e minúsculos) e preencha com a cor do
-
-  style (expanda "#fff" para "#ffffff"; o ReportLab leria "#fff" como azul)
-
-  usando fillMode par-ímpar para os furos das letras. À direita:
-
-  "OFICINA DE ROBÔS" (Helvetica-Bold 18, branco, alinhado à direita em
-
-  w-42, h-56) e "Relatório Executivo - Selic" (Helvetica 11, laranja, em
-
-  w-42, h-76).
-
-- Só na contingência: retângulo laranja (42, h-138, w-84, 22) com o texto
-
-  branco Helvetica-Bold 10 em (52, h-131): "ATENÇÃO: dados de contingência,
-
-  não da consulta ao vivo. Veja a fonte no rodapé."
-
-- "Selic - DD/MM/AAAA a DD/MM/AAAA" em (42, h-170), Helvetica-Bold 18, #1B172D.
-
-- Seis cartões retangulares 155 x 55 em x = 42 + col*175 e
-
-  y = (h-240) - lin*75: "Selic atual (DD/MM/AAAA)" (fundo #1B172D, texto
-
-  branco), "Variação no período", "Mudanças da taxa", "Maior valor", "Menor
-
-  valor", "Média" (fundo #F1F2F5, texto #1B172D). Rótulo Helvetica 9 em
-
-  (x+12, y+35) e valor Helvetica-Bold 16 em (x+12, y+14).
-
-- "Resumo executivo" em (42, h-350), Helvetica-Bold 12; texto a partir de
-
-  (42, h-370), Helvetica 10, entrelinha 15, quebra em 95 caracteres
-
-  (textwrap): "A Selic anualizada base 252 passou de 14,90% para 13,65% entre
-
-  DD/MM/AAAA e DD/MM/AAAA, com queda de 1,25 ponto percentual (-8,39%). A
-
-  taxa mudou 5 vez(es) no período. Últimas mudanças: DD/MM/AAAA: 14,65% >
-
-  14,40%; ..." (as 4 últimas; "alta de"/"queda de"/"estabilidade"; sem
-
-  mudanças: "A taxa não mudou no período.").
-
-- PNG do item 10 em drawImage(48, 72, width=500, height=300,
-
-  preserveAspectRatio=True, anchor="n").
-
-- Rodapé: "Fonte: <fonte>." em (42, 54) Helvetica 8 cinza (laranja e
-
-  negrito na contingência) e "Gerado em DD/MM/AAAA HH:MM pelo Robô Selic
-
-  v1.1.0." em (42, 42). Metadados: título "Relatório Executivo - Selic",
-
-  autor "Oficina de Robôs - BMA FIDC".
-
-
-
-12. LOG, MENSAGENS E ENCERRAMENTO
-
-- logging na tela e em logs/oficina.log (UTF-8, acrescentando), formato
-
-  "AAAA-MM-DD HH:MM:SS | NÍVEL | mensagem". Em janela do Windows mantenha a
-
-  codificação do console; com a saída redirecionada, use UTF-8.
-
-- Ordem: "=====", "OFICINA DE ROBÔS - BMA FIDC | Robô Selic v1.1.0", "=====",
-
-  "Período pedido: ...", "Consultando a API do Banco Central (série 1178) de
-
-  ... a ...", "Dados obtidos com sucesso: N registros.", "Período: ... |
-
-  Registros: N", "Último valor: 13,65% | Variação: -1,25 p.p. | Mudanças da
-
-  taxa: 5", "Gerando painel visual (HTML)...", "Gerando planilha Excel...",
-
-  "Gerando gráfico PNG...", "Gerando relatório PDF...", os caminhos de
-
-  Painel, Excel, Gráfico e PDF, "Fonte dos dados: ..." e, no fim, "Processo
-
-  concluído com sucesso (dados ao vivo do Banco Central)." ou WARNING
-
-  "Processo concluído com DADOS DE CONTINGÊNCIA (não é a consulta ao vivo)."
-
-- Ao final abra o que parametros.ini/--abrir mandar (padrão: o painel) com
-
-  os.startfile no Windows (open no macOS, xdg-open no Linux); se falhar,
-
-  WARNING e continue.
-
-- Erro inesperado: logging.exception e código 1. Quando empacotado em .exe
-
-  (sys.frozen) e sem --no-pause, mostre "Resultados em: <pasta>" e espere
-
-  ENTER antes de fechar; rodando pelo python, não espere.
-
-
-
-13. ENTREGÁVEIS
-
-codigo/main.py (funções separadas: período, consulta, contingência,
-
-resumo, painel, Excel, gráfico, logo no PDF, PDF, abrir e main),
-
-codigo/painel_template.html, codigo/requirements.txt (requests, pandas,
-
-matplotlib, xlsxwriter, reportlab, truststore), e codigo/executar_oficina.bat,
-
-codigo/executar_offline.bat e codigo/executar_escolher_periodo.bat: vão para
-
-a pasta do .bat (pushd "%~dp0"), conferem o Python, instalam as bibliotecas
-
-só se faltarem e rodam "python main.py" (ou --offline / --perguntar),
-
-terminando com pause (não use parênteses dentro de echo em blocos if).
-
-Explique em poucos passos como executar no Windows e como mudar o período.
-
-
-
-14. VALIDAÇÃO
-
-Liste como conferir: comparar 3 valores com o site do Banco Central, clicar
-
-nos filtros do painel, rodar com --offline e ver o aviso de contingência, e
-
-rodar com --meses 3 e com --inicio/--fim.
-
-
-
-15. RESTRIÇÕES
-
-Somente bibliotecas gratuitas e dados públicos. Sem APIs pagas nem chaves de
-
-acesso. Não grave senhas nem dados pessoais no código.
-
-======================================================================
-
-
-
-PROMPT 2 (opcional) - transformar o robô em programa com instalador
-
-----------------------------------------------------------------------
-
-Empacote o main.py do Robô Selic com PyInstaller (--onedir, console, nome
-
-RoboSelic, embutindo dados/exemplo_selic.csv em "dados" e
-
-painel_template.html e logo_bma_fidc.svg na raiz). Quando estiver empacotado
-
-(sys.frozen), os resultados e o parametros.ini ficam em
-
-Documentos\Oficina de Robos BMA e o programa espera ENTER antes de fechar.
-
-Crie um instalador em Python/tkinter, empacotado com PyInstaller --onefile
-
---windowed, que instale para o usuário atual (sem administrador) em
-
-%LOCALAPPDATA%\Programs\OficinaRobosBMA, crie atalhos na Área de Trabalho e
-
-no Menu Iniciar (Robô Selic, Robô Selic (escolher período) com --perguntar,
-
-Robô Selic (offline) com --offline, Resultados do Robô Selic e, no menu,
-
-Parâmetros do Robô Selic abrindo o parametros.ini no Bloco de Notas),
-
-registre a desinstalação em HKCU, não sobrescreva um parametros.ini já
-
-existente e continue a instalação com aviso se não conseguir criar os
-
-atalhos. Ao abrir o robô pelo instalador, passe
-
-PYINSTALLER_RESET_ENVIRONMENT=1 no ambiente.
-
-
-
-A versão pronta e testada destes dois prompts está no repositório:
-
-https://github.com/thaiza-commits/oficina-de-robos-bma
-
+OFICINA DE ROBÔS - BMA FIDC
+Prompt do Robô Selic (v1.1: painel visual e período parametrizável)
+
+Como usar: copie o PROMPT COMPLETO (entre as linhas ===) e cole em uma IA
+gratuita (ChatGPT, Claude, Gemini, Microsoft Copilot...). Ele descreve o robô
+desta oficina em detalhe, para a IA entregar o mesmo resultado: mesmo painel,
+mesmos arquivos, abas, gráfico, PDF e mensagens. Se a resposta vier cortada,
+peça: "continue de onde parou". Coloque na pasta codigo/ o arquivo
+logo_bma_fidc.svg (vem no kit da oficina).
+
+Nunca cole dados de clientes, senhas ou informações internas numa IA pública.
+
+Versão curta (a que aparece no slide 06) - um resumo para apresentar. Ela
+gera um robô parecido, mas NÃO igual ao da demonstração; para o mesmo
+resultado, use o PROMPT COMPLETO abaixo.
+  Crie um programa em Python que consulte a API SGS do Banco Central (série
+  1178, Selic) com dataInicial e dataFinal, no período escolhido (padrão:
+  últimos 12 meses). O programa deve:
+  - Se a internet falhar, usar a última consulta salva e avisar em destaque
+  - Abrir um painel HTML offline com indicadores, gráfico e filtros 1M/3M/12M funcionais
+  - Gerar Excel (Dados, Resumo, Mudanças), gráfico e PDF em #1B172D/#F37522
+  - Ler o período de um parametros.ini, registrar log e usar só bibliotecas gratuitas
+
+======================================================================
+PROMPT COMPLETO
+======================================================================
+Você é um desenvolvedor Python sênior. Crie o "Robô Selic" v1.1.0 da Oficina
+de Robôs BMA FIDC seguindo exatamente a especificação abaixo. Entregue o
+código completo, sem omitir trechos.
+
+1. CONTEXTO
+Robô de demonstração que consulta a Selic no Banco Central e mostra os
+resultados na tela num painel com a identidade visual da BMA FIDC, além de
+Excel, gráfico, PDF e log. Ele roda ao vivo numa apresentação: nunca pode
+travar nem esconder falhas. Se não conseguir dados ao vivo, usa uma
+contingência e AVISA isso claramente.
+
+2. ESTRUTURA DE PASTAS
+Raiz do projeto com: codigo/ (main.py, painel_template.html,
+logo_bma_fidc.svg, requirements.txt e os .bat), dados/, output/, logs/ e
+parametros.ini. O main.py calcula a raiz como a pasta-pai de codigo/
+(Path(__file__).resolve().parent.parent), cria dados/, output/ e logs/ e,
+se parametros.ini não existir, cria com o modelo do item 4.
+A primeira linha executada (antes de importar pandas e matplotlib) imprime
+"Iniciando o Robô Selic... aguarde alguns segundos.".
+
+3. IDENTIDADE VISUAL (site bmafidc.com.br)
+Cores: primária (fundo escuro) #1B172D; azul #2B63DF; azul-escuro #253E8C;
+laranja #F37522 (o do logo); texto #202020; fundo cinza #EDEDED.
+Fonte do painel: Averta, com alternativas "Segoe UI", system-ui, Arial.
+Títulos finos (peso 400) com letras juntas (letter-spacing negativo);
+botões e selos com cantos retos, texto em caixa alta e negrito (peso 800).
+O logo é codigo/logo_bma_fidc.svg (branco com um detalhe laranja, para fundo
+escuro).
+
+4. PERÍODO PARAMETRIZÁVEL
+- Padrão: últimos 12 meses até hoje.
+- parametros.ini (configparser, UTF-8), criado com este conteúdo:
+    ; Parâmetros do Robô Selic - edite no Bloco de Notas e rode o robô de novo.
+    [periodo]
+    ; Quantos meses para trás a partir de hoje (usado se as datas abaixo estiverem vazias).
+    meses = 12
+    ; Ou um período fixo, no formato DD/MM/AAAA (deixe em branco para usar "meses").
+    data_inicial =
+    data_final =
+
+    [saida]
+    ; O que abrir ao final: painel, pdf, ambos ou nenhum.
+    abrir = painel
+- Leia o parametros.ini tolerando UTF-8 com ou sem BOM e ANSI (cp1252). Se
+  estiver ilegível ou com valor inválido, registre WARNING e use o padrão;
+  o robô nunca pode parar por causa desse arquivo.
+- Parâmetros de linha de comando (argparse): --meses N, --inicio DD/MM/AAAA,
+  --fim DD/MM/AAAA, --perguntar (pergunta as duas datas na tela; ENTER mantém
+  o padrão; data inválida pergunta de novo), --offline, --abrir
+  {painel,pdf,ambos,nenhum}, --no-open (= --abrir nenhum) e --no-pause.
+- Prioridade: --inicio/--fim/--meses > --perguntar > parametros.ini > padrão.
+- "N meses atrás" subtrai meses do calendário, ajustando o dia ao fim do mês.
+- A data final nunca passa de hoje e a inicial nunca antes de 04/06/1986
+  (início da série). Início depois do fim gera ValueError "Período inválido:
+  ... (a data inicial deve vir antes da final)". Data mal escrita gera
+  ValueError 'Data inválida "x": use DD/MM/AAAA, por exemplo 01/01/2026.'.
+  Esses erros aparecem no log só como "Não foi possível rodar: <mensagem>",
+  sem rastreamento, e o programa sai com código 1.
+- Registre no log: "Período pedido: DD/MM/AAAA a DD/MM/AAAA (<origem>)", onde
+  origem é "padrão (12 meses)", "parametros.ini (N meses)", "parametros.ini
+  (datas)", "informado na tela", "linha de comando (N meses)" ou "linha de
+  comando (datas)".
+
+5. FONTE DE DADOS
+- API SGS, série 1178: GET https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados
+  com formato=json, dataInicial=DD/MM/AAAA e dataFinal=DD/MM/AAAA.
+- A API aceita no máximo 10 anos por consulta: peça em blocos de até 3.650
+  dias e junte as respostas. NÃO use ".../dados/ultimos/N" (limitado a 20
+  valores; responde erro 400).
+- timeout de 30 segundos e raise_for_status() em cada bloco. Em queda de
+
+  conexão ou erro 5xx, tente de novo até 3 vezes, esperando 2 s e 4 s, com
+
+  WARNING "Tentativa N de 3 falhou (<TipoDoErro>). Nova tentativa em X s...";
+
+  erro 4xx não é repetido.
+- Resposta: lista de {"data": "DD/MM/AAAA", "valor": "13.65"}. O valor vem
+  com PONTO DECIMAL e sem separador de milhar: só troque "," por "." (para
+  aceitar o CSV) e converta; nunca remova o ponto. Converta a data
+  (%d/%m/%Y), remova inválidos e datas duplicadas e ordene. Lista vazia ou sem linhas válidas gera ValueError.
+- Tente "import truststore; truststore.inject_into_ssl()" no início, dentro de
+  try/except ImportError (necessário em redes corporativas com proxy).
+
+6. CONTINGÊNCIA (falha da consulta ou --offline)
+- Toda consulta ao vivo bem-sucedida é ACUMULADA em
+  dados/ultima_consulta_selic.csv (junta com o que já existia, remove datas
+  duplicadas mantendo a mais nova, ordena; separador ";", decimal ",", datas
+  DD/MM/AAAA, utf-8-sig, colunas data;valor).
+- Em falha (requests.RequestException, ValueError ou KeyError), registre o
+  erro e use: a) o cache, se existir (fonte "Banco Central do Brasil - SGS,
+  série 1178 - última consulta salva em DD/MM/AAAA HH:MM", data de
+  modificação do arquivo); b) senão, dados/exemplo_selic.csv (fonte "DADOS DE
+  EXEMPLO (modo offline) - não usar para decisão"). O exemplo vem no kit com
+  251 observações reais de 24/09/2025 a 23/09/2026; se não existir, gere um
+  com um ano de dias úteis.
+- Recorte os dados offline ao período pedido. Se sobrarem menos de 2 linhas,
+  use tudo e avise "ATENÇÃO: o período pedido não está nos dados offline;
+  mostrando ... a ...". Se o recorte começar mais de 7 dias depois do início
+  pedido ou terminar mais de 7 dias antes do fim, avise "ATENÇÃO: os dados
+  offline cobrem só parte do período pedido (... a ...)."
+- Na consulta ao vivo a fonte é "Banco Central do Brasil - SGS, série 1178 -
+  consulta em DD/MM/AAAA HH:MM".
+- Na contingência: WARNING começando por "ATENÇÃO:" no log, selo e faixa
+  laranja no painel, fonte em laranja no Excel e faixa laranja no PDF.
+
+7. INDICADORES
+primeiro, último, maior, menor, média, variação em p.p. (último - primeiro),
+variação % (p.p. / primeiro x 100; 0 se o primeiro for 0), data inicial,
+data final, número de registros e a lista de MUDANÇAS DA TAXA: cada dia em
+que o valor difere do dia anterior, com data, valor anterior ("de") e novo
+("para") - são as decisões do Copom. Números no padrão brasileiro: 13,65% e
+-0,25 p.p. (sinal + quando positivo).
+
+8. PAINEL - output/painel_selic.html (a entrega principal)
+Arquivo HTML único e autocontido: CSS e JavaScript embutidos, logo SVG
+embutido, SEM bibliotecas externas nem internet (abre offline). Gere a
+partir de codigo/painel_template.html trocando __LOGO__ pelo conteúdo do SVG
+e __DADOS__ por um JSON com: serie (lista de ["AAAA-MM-DD", valor]), fonte,
+ao_vivo (true/false), gerado_em ("DD/MM/AAAA HH:MM") e versao.
+O painel tem, de cima para baixo:
+- Cabeçalho com fundo #1B172D: logo à esquerda (altura 46 px); à direita um
+  selo "DADOS AO VIVO - BANCO CENTRAL" (fundo azul #2B63DF) ou
+  "CONTINGÊNCIA" (fundo laranja); título "Painel Selic" em 44 px, peso 400,
+  com a palavra "Selic" em laranja e peso 600; subtítulo "DD/MM/AAAA a
+  DD/MM/AAAA · série 1178 do Banco Central (Selic anualizada base 252)".
+- Na contingência, faixa laranja logo abaixo: "ATENÇÃO: dados de
+  contingência, não da consulta ao vivo. Fonte: <fonte>".
+- Filtros: o rótulo "Período:", botões 1M, 3M, 6M, 12M e Tudo (o ativo em azul #2B63DF; começa em
+  Tudo) e dois campos de data "de" e "até" limitados aos dados. Tudo abaixo
+  é recalculado no navegador ao filtrar.
+- Seis cartões brancos: Selic atual (cartão escuro #1B172D, "em DD/MM/AAAA"),
+  Variação no período (p.p., em azul se caiu e laranja se subiu, com a
+  variação % "desde DD/MM/AAAA"), Mudanças da taxa (quantidade, "última em
+  DD/MM/AAAA"), Maior, Menor e Média ("N observações").
+- Grade em duas colunas (2/3 e 1/3): à esquerda "Evolução da Selic", à
+  direita "Mudanças da taxa"; abaixo, ocupando a largura toda, "Média
+  mensal". Cada seção é um cartão branco com título (18 px, peso 600) e uma
+  legenda cinza de 12 px:
+    Evolução da Selic: "% ao ano, base 252. Os pontos laranja marcam as
+    mudanças da taxa (decisões do Copom)."
+    Mudanças da taxa: "Data em que a nova taxa passou a valer."
+    Média mensal: "Média das observações diárias de cada mês (% a.a.). O
+    ponto laranja é o mês mais recente."
+- Eixos Y dos dois gráficos com números redondos: margem de 15% da
+  amplitude (mínimo 0,1) e passo escolhido entre 0,05; 0,1; 0,25; 0,5; 1; 2
+  e 5, o primeiro que dê no máximo 6 intervalos.
+- "Evolução da Selic": gráfico SVG em degraus (a taxa só muda nas decisões),
+  linha azul #2B63DF de 2,5 px com área em degradê azul, grade horizontal
+  cinza, eixo Y com duas casas e vírgula, eixo X com meses ("out/25"), ponto
+  laranja em cada mudança com o novo valor ao lado (à esquerda perto da borda
+  direita), ponto escuro no último dia e dica ao passar o mouse (data e
+  valor).
+- "Mudanças da taxa": tabela Data | De | Para | Variação, mais recente
+  primeiro, cabeçalho escuro #1B172D; abaixo, um cartão cinza (#EDEDED) com
+  o rótulo "Há 12 meses (DD/MM/AAAA)", a taxa daquela data em número grande
+  (28 px, peso 600) e, embaixo, a diferença "-1,25 p.p. até DD/MM/AAAA" (azul
+  se caiu, laranja se subiu). Se a série começar até 10 dias depois da data
+  de 12 meses atrás, use o primeiro dia da série.
+- "Média mensal": gráfico de pontos ligados por linha (NÃO use barras com
+  eixo cortado), azul-escuro #253E8C, último mês em laranja, valor sobre cada
+  ponto e eixo Y com grade.
+- Rodapé: "Fonte: ... | Gerado em ... pelo Robô Selic v1.1.0 | Oficina de
+  Robôs - BMA FIDC".
+- Responsivo (6 cartões viram 3 em telas estreitas) e redesenha ao
+  redimensionar a janela.
+
+9. EXCEL - output/selic.xlsx (xlsxwriter pelo pandas.ExcelWriter)
+- Aba "Dados": "Data" (dd/mm/yyyy) e "Selic (% a.a.)" (0.00); cabeçalho em
+  negrito, branco sobre #1B172D, altura 24; larguras 15 e 18; congelar a
+  primeira linha; autofiltro.
+- Aba "Resumo": "Indicador" | "Valor" no mesmo estilo e as linhas Primeiro
+  valor (% a.a.), Último valor (% a.a.), Maior valor (% a.a.), Menor valor
+  (% a.a.), Média (% a.a.) (0.00); Variação (p.p.) (+0.00;-0.00;0.00);
+  Variação (%) como fração (+0.00%;-0.00%;0.00%); Mudanças da taxa
+  (número). Linha em branco e depois Período ("DD/MM/AAAA a DD/MM/AAAA (N
+  registros)"), Fonte (laranja #F37522 e negrito se for contingência) e
+  Gerado em. Formate célula a célula (set_column só para largura).
+  Gráfico de linha nativo na D2 com os dados da aba Dados: título "Evolução
+  da Selic", linha #2B63DF 2,25, eixo X "mm/yy", eixo Y 0.00, sem legenda,
+  720x380.
+- Aba "Mudanças": Data | De (% a.a.) | Para (% a.a.) | Variação (p.p.), uma
+  linha por mudança; sem mudanças, escreva "A taxa não mudou no período.".
+
+10. GRÁFICO - output/selic.png (matplotlib com matplotlib.use("Agg"))
+10 x 5,4 polegadas, 180 dpi; ax.step(where="post") azul #2B63DF 2,4 com
+preenchimento azul alpha 0,10; pontos laranja (tamanho 8, borda branca) nas
+mudanças com o valor ao lado (até 12 mudanças; à esquerda nos últimos 7% do
+período); título "Selic (% a.a.) - DD/MM/AAAA a DD/MM/AAAA" em #1B172D;
+datas "%d/%m" até 60 dias, "%m/%y" até 1.100 dias e "%Y" acima; eixo Y com
+vírgula; margem de 15% da amplitude (mínimo 0,1); só grade horizontal; sem
+bordas superior e direita.
+
+11. RELATÓRIO PDF - output/resumo_selic.pdf (reportlab, A4, canvas)
+Coordenadas em pontos, w, h = A4, origem no canto inferior esquerdo:
+- Faixa #1B172D (0, h-110, w, 110). Logo desenhado a partir do SVG em
+  (42, h-88) com 118 pt de largura: leia os <path> e <rect>, converta os
+  comandos M/L/H/V/C/Z (maiúsculos e minúsculos) e preencha com a cor do
+  style (expanda "#fff" para "#ffffff"; o ReportLab leria "#fff" como azul)
+  usando fillMode par-ímpar para os furos das letras. À direita:
+  "OFICINA DE ROBÔS" (Helvetica-Bold 18, branco, alinhado à direita em
+  w-42, h-56) e "Relatório Executivo - Selic" (Helvetica 11, laranja, em
+  w-42, h-76).
+- Só na contingência: retângulo laranja (42, h-138, w-84, 22) com o texto
+  branco Helvetica-Bold 10 em (52, h-131): "ATENÇÃO: dados de contingência,
+  não da consulta ao vivo. Veja a fonte no rodapé."
+- "Selic - DD/MM/AAAA a DD/MM/AAAA" em (42, h-170), Helvetica-Bold 18, #1B172D.
+- Seis cartões retangulares 155 x 55 em x = 42 + col*175 e
+  y = (h-240) - lin*75: "Selic atual (DD/MM/AAAA)" (fundo #1B172D, texto
+  branco), "Variação no período", "Mudanças da taxa", "Maior valor", "Menor
+  valor", "Média" (fundo #F1F2F5, texto #1B172D). Rótulo Helvetica 9 em
+  (x+12, y+35) e valor Helvetica-Bold 16 em (x+12, y+14).
+- "Resumo executivo" em (42, h-350), Helvetica-Bold 12; texto a partir de
+  (42, h-370), Helvetica 10, entrelinha 15, quebra em 95 caracteres
+  (textwrap): "A Selic anualizada base 252 passou de 14,90% para 13,65% entre
+  DD/MM/AAAA e DD/MM/AAAA, com queda de 1,25 ponto percentual (-8,39%). A
+  taxa mudou 5 vez(es) no período. Últimas mudanças: DD/MM/AAAA: 14,65% >
+  14,40%; ..." (as 4 últimas; "alta de"/"queda de"/"estabilidade"; sem
+  mudanças: "A taxa não mudou no período.").
+- PNG do item 10 em drawImage(48, 72, width=500, height=300,
+  preserveAspectRatio=True, anchor="n").
+- Rodapé: "Fonte: <fonte>." em (42, 54) Helvetica 8 cinza (laranja e
+  negrito na contingência) e "Gerado em DD/MM/AAAA HH:MM pelo Robô Selic
+  v1.1.0." em (42, 42). Metadados: título "Relatório Executivo - Selic",
+  autor "Oficina de Robôs - BMA FIDC".
+
+12. LOG, MENSAGENS E ENCERRAMENTO
+- logging na tela e em logs/oficina.log (UTF-8, acrescentando), formato
+  "AAAA-MM-DD HH:MM:SS | NÍVEL | mensagem". Em janela do Windows mantenha a
+  codificação do console; com a saída redirecionada, use UTF-8.
+- Ordem: "=====", "OFICINA DE ROBÔS - BMA FIDC | Robô Selic v1.1.0", "=====",
+  "Período pedido: ...", "Consultando a API do Banco Central (série 1178) de
+  ... a ...", "Dados obtidos com sucesso: N registros.", "Período: ... |
+  Registros: N", "Último valor: 13,65% | Variação: -1,25 p.p. | Mudanças da
+  taxa: 5", "Gerando painel visual (HTML)...", "Gerando planilha Excel...",
+  "Gerando gráfico PNG...", "Gerando relatório PDF...", os caminhos de
+  Painel, Excel, Gráfico e PDF, "Fonte dos dados: ..." e, no fim, "Processo
+  concluído com sucesso (dados ao vivo do Banco Central)." ou WARNING
+  "Processo concluído com DADOS DE CONTINGÊNCIA (não é a consulta ao vivo)."
+- Ao final abra o que parametros.ini/--abrir mandar (padrão: o painel) com
+  os.startfile no Windows (open no macOS, xdg-open no Linux); se falhar,
+  WARNING e continue.
+- Erro inesperado: logging.exception e código 1. Quando empacotado em .exe
+  (sys.frozen) e sem --no-pause, mostre "Resultados em: <pasta>" e espere
+  ENTER antes de fechar; rodando pelo python, não espere.
+
+13. ENTREGÁVEIS
+codigo/main.py (funções separadas: período, consulta, contingência,
+resumo, painel, Excel, gráfico, logo no PDF, PDF, abrir e main),
+codigo/painel_template.html, codigo/requirements.txt (requests, pandas,
+matplotlib, xlsxwriter, reportlab, truststore), e codigo/executar_oficina.bat,
+codigo/executar_offline.bat e codigo/executar_escolher_periodo.bat: vão para
+a pasta do .bat (pushd "%~dp0"), conferem o Python, instalam as bibliotecas
+só se faltarem e rodam "python main.py" (ou --offline / --perguntar),
+terminando com pause (não use parênteses dentro de echo em blocos if).
+Explique em poucos passos como executar no Windows e como mudar o período.
+
+14. VALIDAÇÃO
+Liste como conferir: comparar 3 valores com o site do Banco Central, clicar
+nos filtros do painel, rodar com --offline e ver o aviso de contingência, e
+rodar com --meses 3 e com --inicio/--fim.
+
+15. RESTRIÇÕES
+Somente bibliotecas gratuitas e dados públicos. Sem APIs pagas nem chaves de
+acesso. Não grave senhas nem dados pessoais no código.
+======================================================================
+
+PROMPT 2 (opcional) - transformar o robô em programa com instalador
+----------------------------------------------------------------------
+Empacote o main.py do Robô Selic com PyInstaller (--onedir, console, nome
+RoboSelic, embutindo dados/exemplo_selic.csv em "dados" e
+painel_template.html e logo_bma_fidc.svg na raiz). Quando estiver empacotado
+(sys.frozen), os resultados e o parametros.ini ficam em
+Documentos\Oficina de Robos BMA e o programa espera ENTER antes de fechar.
+Crie um instalador em Python/tkinter, empacotado com PyInstaller --onefile
+--windowed, que instale para o usuário atual (sem administrador) em
+%LOCALAPPDATA%\Programs\OficinaRobosBMA, crie atalhos na Área de Trabalho e
+no Menu Iniciar (Robô Selic, Robô Selic (escolher período) com --perguntar,
+Robô Selic (offline) com --offline, Resultados do Robô Selic e, no menu,
+Parâmetros do Robô Selic abrindo o parametros.ini no Bloco de Notas),
+registre a desinstalação em HKCU, não sobrescreva um parametros.ini já
+existente e continue a instalação com aviso se não conseguir criar os
+atalhos. Ao abrir o robô pelo instalador, passe
+PYINSTALLER_RESET_ENVIRONMENT=1 no ambiente.
+
+A versão pronta e testada destes dois prompts está no repositório:
+https://github.com/thaiza-commits/oficina-de-robos-bma

@@ -94,11 +94,19 @@ Pela linha de comando: `python codigo/main.py [--meses N | --inicio DD/MM/AAAA -
 
 ## Faça o seu com IA gratuita
 
-O arquivo [`prompt/prompt_oficina.txt`](prompt/prompt_oficina.txt) tem o
-**prompt completo** que descreve este robô: painel, período, Excel, PDF e
-contingência. Cole em qualquer IA gratuita (ChatGPT, Claude, Gemini,
-Microsoft Copilot…) para obter o mesmo resultado. O slide 07 lista oito IAs
-gratuitas e para que cada uma serve.
+O arquivo [`prompt/prompt_oficina.txt`](prompt/prompt_oficina.txt) tem duas versões:
+
+- **Prompt completo:** descreve este robô em detalhe (painel, período,
+  Excel, PDF e contingência). Cole em qualquer IA gratuita (ChatGPT, Claude,
+  Gemini, Microsoft Copilot…) para obter **o mesmo resultado** da
+  demonstração. Foi testado: uma IA que recebeu só esse texto gerou o mesmo
+  PDF e o mesmo painel.
+- **Versão curta (slide 06):** um resumo para apresentar. Ela gera um robô
+  parecido (painel HTML, contingência com aviso, `parametros.ini`, cores da
+  BMA), mas não igual. Sem os detalhes dela, a IA tende a inventar dados
+  quando a internet cai e a fazer um "painel" que não é HTML.
+
+O slide 07 lista oito IAs gratuitas e para que cada uma serve.
 
 > Nunca cole dados de clientes, senhas ou informações internas em uma IA pública.
 

@@ -22,7 +22,7 @@ Slides: `apresentacao/BMA-Oficina-de-Robos_com_QR.pptx` (16 slides).
 | 3 | 03 O que é um robô | 1 min | Robô de software: faz no computador o que faríamos à mão. |
 | 4 | 04 O segredo | 1 min | Antes: a pessoa faz tudo. Depois: o robô faz e a pessoa recebe o resultado. |
 | 5 | 05 Desafio Selic | 1 min | Dados oficiais, públicos e gratuitos. |
-| 6 | 06 O prompt | 2 min | Quanto melhor a instrução, melhor o código. O prompt completo está no repositório. |
+| 6 | 06 O prompt | 2 min | Quanto melhor a instrução, melhor o código. Mostre por que cada linha está ali: sem "dataInicial e dataFinal" a IA costuma usar um endereço da API que falha; sem "avisar em destaque" ela inventa dados quando a internet cai; sem "HTML offline" o painel depende de internet. O slide é um resumo; o prompt completo (QR do final) gera o mesmo robô da demonstração. |
 | 7 | 07 IAs gratuitas | 2 min | Qualquer uma serve; compare as respostas. **Nunca cole dados internos.** |
 | 8 | Demo: instalador | 3 min | Dois cliques em `Instalador_OficinaRobos_BMA.exe` → **Instalar** (ou ENTER). A etapa "Criando atalhos" leva até 1 minuto: aproveite para explicar que não precisa de Python. |
 | 9 | 08 Demo: robô | 3 min | Clique em **Abrir o Robô Selic**. Mostre as mensagens na janela preta; ao final o painel abre sozinho no navegador. |
