@@ -1,6 +1,6 @@
 QRCode_GitHub.png aponta para o repositório da oficina:
 https://github.com/thaiza-commits/oficina-de-robos-bma
 
-É o mesmo QR do slide 15 da apresentação. Para apontar para outro endereço,
+É o mesmo QR do slide 16 da apresentação. Para apontar para outro endereço,
 edite GITHUB_URL em gerar_qrcode.py e rode:  python gerar_qrcode.py
-(depois substitua a imagem no slide 15).
+(depois substitua a imagem no slide 16).

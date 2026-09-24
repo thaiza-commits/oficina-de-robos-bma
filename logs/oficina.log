@@ -1,15 +1,18 @@
-2026-09-24 09:35:54 | INFO | ====================================================
-2026-09-24 09:35:54 | INFO | OFICINA DE ROBÔS - BMA FIDC  |  Robô Selic v1.0.0
-2026-09-24 09:35:54 | INFO | ====================================================
-2026-09-24 09:35:54 | INFO | Consultando a API do Banco Central (série 1178)...
-2026-09-24 09:35:55 | INFO | Dados obtidos com sucesso: 30 registros.
-2026-09-24 09:35:55 | INFO | Período: 12/08/2026 a 23/09/2026 | Registros: 30
-2026-09-24 09:35:55 | INFO | Último valor: 13,65% | Variação: -0,25 p.p.
-2026-09-24 09:35:55 | INFO | Gerando planilha Excel...
-2026-09-24 09:35:55 | INFO | Gerando gráfico PNG...
-2026-09-24 09:35:55 | INFO | Gerando relatório PDF...
-2026-09-24 09:35:55 | INFO | Excel: C:\ob\OficinaRobos-BMA\output\selic.xlsx
-2026-09-24 09:35:55 | INFO | Gráfico: C:\ob\OficinaRobos-BMA\output\selic.png
-2026-09-24 09:35:55 | INFO | PDF: C:\ob\OficinaRobos-BMA\output\resumo_selic.pdf
-2026-09-24 09:35:55 | INFO | Fonte dos dados: Banco Central do Brasil - SGS, série 1178 - consulta em 24/09/2026 09:35
-2026-09-24 09:35:55 | INFO | Processo concluído com sucesso (dados ao vivo do Banco Central).
+2026-09-24 12:40:53 | INFO | ====================================================
+2026-09-24 12:40:53 | INFO | OFICINA DE ROBÔS - BMA FIDC  |  Robô Selic v1.1.0
+2026-09-24 12:40:53 | INFO | ====================================================
+2026-09-24 12:40:53 | INFO | Período pedido: 24/09/2025 a 24/09/2026 (parametros.ini (12 meses))
+2026-09-24 12:40:53 | INFO | Consultando a API do Banco Central (série 1178) de 24/09/2025 a 24/09/2026...
+2026-09-24 12:40:57 | INFO | Dados obtidos com sucesso: 251 registros.
+2026-09-24 12:40:57 | INFO | Período: 24/09/2025 a 23/09/2026 | Registros: 251
+2026-09-24 12:40:57 | INFO | Último valor: 13,65% | Variação: -1,25 p.p. | Mudanças da taxa: 5
+2026-09-24 12:40:57 | INFO | Gerando painel visual (HTML)...
+2026-09-24 12:40:57 | INFO | Gerando planilha Excel...
+2026-09-24 12:40:58 | INFO | Gerando gráfico PNG...
+2026-09-24 12:40:58 | INFO | Gerando relatório PDF...
+2026-09-24 12:40:58 | INFO | Painel: C:\ob\OficinaRobos-BMA\output\painel_selic.html
+2026-09-24 12:40:58 | INFO | Excel: C:\ob\OficinaRobos-BMA\output\selic.xlsx
+2026-09-24 12:40:58 | INFO | Gráfico: C:\ob\OficinaRobos-BMA\output\selic.png
+2026-09-24 12:40:58 | INFO | PDF: C:\ob\OficinaRobos-BMA\output\resumo_selic.pdf
+2026-09-24 12:40:58 | INFO | Fonte dos dados: Banco Central do Brasil - SGS, série 1178 - consulta em 24/09/2026 12:40
+2026-09-24 12:40:58 | INFO | Processo concluído com sucesso (dados ao vivo do Banco Central).

@@ -15,7 +15,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-VERSAO = "1.0.0"
+VERSAO = "1.1.0"
 AQUI = Path(__file__).resolve().parent
 RAIZ = AQUI.parent
 TRABALHO = Path(tempfile.gettempdir()) / "orbma_build"
@@ -75,6 +75,8 @@ def main() -> int:
     rodar(sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--onedir", "--console",
           "--name", "RoboSelic", "--icon", str(icone), "--version-file", "versao_robo.txt",
           "--add-data", f"{TRABALHO / 'dados_src' / 'exemplo_selic.csv'};dados",
+          "--add-data", f"{RAIZ / 'codigo' / 'painel_template.html'};.",
+          "--add-data", f"{RAIZ / 'codigo' / 'logo_bma_fidc.svg'};.",
           "--exclude-module", "tkinter", "--collect-data", "certifi",
           "main.py")
     robo_dir = TRABALHO / "dist" / "RoboSelic"
@@ -82,7 +84,7 @@ def main() -> int:
     # Teste de fumaça antes de empacotar: o .exe precisa rodar sozinho.
     teste = subprocess.run([str(robo_dir / "RoboSelic.exe"), "--offline", "--no-open", "--no-pause"],
                            capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if teste.returncode != 0 or "Processo concluído" not in teste.stdout:
+    if teste.returncode != 0 or "Processo concluído" not in teste.stdout or "Painel:" not in teste.stdout:
         print(teste.stdout, teste.stderr)
         raise SystemExit("RoboSelic.exe falhou no teste offline - instalador NÃO gerado.")
     print("Teste do RoboSelic.exe (offline): OK")
@@ -99,6 +101,7 @@ def main() -> int:
     for origem in [RAIZ / "prompt" / "prompt_oficina.txt",
                    RAIZ / "apostila" / "Apostila_Oficina_de_Robos.pdf",
                    RAIZ / "links" / "links_uteis.txt",
+                   RAIZ / "parametros.ini",
                    RAIZ / "codigo" / "main.py"]:
         shutil.copy2(origem, extras / origem.name)
     (extras / "main.py").rename(extras / "codigo_robo_selic.py")

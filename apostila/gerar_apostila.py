@@ -1,14 +1,18 @@
 """Gera Apostila_Oficina_de_Robos.pdf (1 página A4). Rode: python gerar_apostila.py"""
+import sys
 from pathlib import Path
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "codigo"))
+from main import LARANJA, PRIMARIA, desenhar_logo  # noqa: E402 - mesma identidade e logo do robô
+
 SAIDA = Path(__file__).with_name("Apostila_Oficina_de_Robos.pdf")
-NAVY = colors.HexColor("#0B1D3A")
-ORANGE = colors.HexColor("#F28C2B")
-LIGHT = colors.HexColor("#F3F5F8")
+NAVY = colors.HexColor(PRIMARIA)
+ORANGE = colors.HexColor(LARANJA)
+LIGHT = colors.HexColor("#F1F2F5")
 CINZA = colors.HexColor("#555555")
 REPO = "github.com/thaiza-commits/oficina-de-robos-bma"
 
@@ -19,9 +23,11 @@ w, h = A4
 
 c.setFillColor(NAVY)
 c.rect(0, h - 100, w, 100, fill=1, stroke=0)
+desenhar_logo(c, w - 38 - 100, h - 78, 100)
 c.setFillColor(colors.white)
 c.setFont("Helvetica-Bold", 24)
 c.drawString(38, h - 52, "OFICINA DE ROBÔS")
+c.setFillColor(ORANGE)
 c.setFont("Helvetica", 12)
 c.drawString(38, h - 76, "Guia rápido para criar sua primeira automação")
 
@@ -57,8 +63,8 @@ c.setFillColor(colors.black)
 linhas = [
     "1. Baixe Instalador_OficinaRobos_BMA.exe pelo QR Code ou em " + REPO + ".",
     "2. Dois cliques > Instalar. Se o Windows avisar, clique em Mais informações > Executar assim mesmo.",
-    "3. Abra o atalho Robô Selic. Excel, gráfico e PDF ficam em Documentos\\Oficina de Robos BMA.",
-    "Sem internet? Use Robô Selic (offline): ele usa a última consulta salva e avisa em laranja.",
+    "3. Abra o atalho Robô Selic: o painel com os últimos 12 meses abre sozinho no navegador.",
+    "Outro período? Use Robô Selic (escolher período). Sem internet? Use Robô Selic (offline).",
 ]
 for k, linha in enumerate(linhas):
     c.drawString(40, y - 18 - k * 14, linha)
@@ -91,11 +97,11 @@ c.setFont("Helvetica-Bold", 13)
 c.drawString(52, 214, "Prompt utilizado")
 c.setFont("Helvetica", 9.5)
 prompt = [
-    "Crie um programa em Python que consulte a API pública do Banco Central do Brasil (SGS) e obtenha",
-    "as últimas 30 observações da série 1178 (Selic anualizada base 252). O programa deve tratar erros e",
-    "usar dados de contingência se a internet falhar, gerar Excel com as abas Dados e Resumo e um gráfico",
-    "da Selic, criar um relatório PDF com os indicadores e abri-lo ao final, registrar a execução em log e",
-    "usar só bibliotecas gratuitas.",
+    "Crie um programa em Python que consulte a API pública do Banco Central do Brasil (SGS) e obtenha a",
+    "série 1178 (Selic anualizada base 252) no período escolhido - por padrão, os últimos 12 meses. O",
+    "programa deve tratar erros e usar contingência se a internet falhar, gerar um painel visual em HTML",
+    "com gráficos e indicadores, um Excel com as abas Dados, Resumo e Mudanças, um relatório PDF,",
+    "registrar a execução em log e usar só bibliotecas gratuitas.",
 ]
 for k, linha in enumerate(prompt):
     c.drawString(52, 196 - k * 14, linha)

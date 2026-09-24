@@ -20,7 +20,7 @@ import threading
 import zipfile
 from pathlib import Path
 
-VERSAO = "1.0.0"
+VERSAO = "1.1.0"
 NOME = "Oficina de Robôs BMA"
 APP_ID = "OficinaRobosBMA"
 NAVY = "#0B1D3A"
@@ -53,18 +53,19 @@ def ps_str(texto: str | Path) -> str:
 
 
 def criar_atalhos(na_area_de_trabalho: bool) -> list[Path]:
-    atalhos = [
-        (MENU_DIR / "Robô Selic.lnk", EXE, "", "Consulta a Selic ao vivo no Banco Central"),
-        (MENU_DIR / "Robô Selic (offline).lnk", EXE, "--offline", "Roda sem internet (última consulta salva)"),
-        (MENU_DIR / "Resultados do Robô Selic.lnk", DOCS_DIR, "", "Excel, gráfico, PDF, prompt e apostila"),
+    principais = [
+        ("Robô Selic.lnk", EXE, "", "Consulta a Selic ao vivo e abre o painel (últimos 12 meses)"),
+        ("Robô Selic (escolher período).lnk", EXE, "--perguntar", "Pergunta as datas e consulta a Selic"),
+        ("Robô Selic (offline).lnk", EXE, "--offline", "Roda sem internet (última consulta salva)"),
+        ("Resultados do Robô Selic.lnk", DOCS_DIR, "", "Painel, Excel, gráfico, PDF, prompt e apostila"),
+    ]
+    atalhos = [(MENU_DIR / nome, alvo, arg, desc) for nome, alvo, arg, desc in principais] + [
+        (MENU_DIR / "Parâmetros do Robô Selic.lnk", Path(os.environ.get("SystemRoot", r"C:\Windows")) / "notepad.exe",
+         f'"{DOCS_DIR / "parametros.ini"}"', "Período padrão e o que abrir ao final"),
         (MENU_DIR / "Desinstalar.lnk", APP_DIR / "desinstalar.cmd", "", "Remove a Oficina de Robôs BMA"),
     ]
     if na_area_de_trabalho:
-        atalhos += [
-            (DESKTOP_DIR / "Robô Selic.lnk", EXE, "", "Consulta a Selic ao vivo no Banco Central"),
-            (DESKTOP_DIR / "Robô Selic (offline).lnk", EXE, "--offline", "Roda sem internet (última consulta salva)"),
-            (DESKTOP_DIR / "Resultados do Robô Selic.lnk", DOCS_DIR, "", "Excel, gráfico, PDF, prompt e apostila"),
-        ]
+        atalhos += [(DESKTOP_DIR / nome, alvo, arg, desc) for nome, alvo, arg, desc in principais]
     MENU_DIR.mkdir(parents=True, exist_ok=True)
     linhas = ["$s = New-Object -ComObject WScript.Shell"]
     for lnk, alvo, argumentos, descricao in atalhos:
@@ -157,7 +158,10 @@ def instalar(na_area_de_trabalho: bool = True, progresso=lambda texto, pct: None
     DOCS_DIR.mkdir(parents=True, exist_ok=True)
     if EXTRAS.exists():
         for arquivo in EXTRAS.iterdir():
-            shutil.copy2(arquivo, DOCS_DIR / arquivo.name)
+            destino = DOCS_DIR / arquivo.name
+            if arquivo.name == "parametros.ini" and destino.exists():
+                continue  # preserva o período que a pessoa já configurou
+            shutil.copy2(arquivo, destino)
 
     # Atalhos e registro são opcionais: se a política da máquina bloquear o
     # PowerShell ou o registro, o robô continua instalado e utilizável.
