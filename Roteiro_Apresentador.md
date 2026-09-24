@@ -40,6 +40,7 @@ Ao vivo o robô traz o dia mais recente; se as datas mudarem, é o esperado.
 | --- | --- |
 | Sem internet ou Banco Central fora do ar | O robô usa sozinho a última consulta salva e avisa em laranja. Diga: "é a contingência funcionando". Ou use o atalho **Robô Selic (offline)**. |
 | Windows diz "O Windows protegeu o computador" | **Mais informações → Executar assim mesmo** (o instalador não é assinado). |
+| Instalador avisa que não criou os atalhos | O robô foi instalado mesmo assim: abra o `RoboSelic.exe` no caminho que o aviso mostra (política da máquina bloqueou o PowerShell). |
 | Antivírus bloqueou o instalador | Use `RoboSelic_portatil.zip` (extrair e rodar `RoboSelic.exe`) ou `codigo\executar_offline.bat` (precisa de Python). |
 | A janela preta demora para mostrar algo | Na primeira execução o Windows verifica os arquivos; leva de 10 a 30 segundos. |
 | PDF não abriu | Atalho **Resultados do Robô Selic** → `output\resumo_selic.pdf`. |

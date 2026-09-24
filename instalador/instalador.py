@@ -132,7 +132,8 @@ def registrar_desinstalacao() -> None:
         winreg.SetValueEx(chave, "NoRepair", 0, winreg.REG_DWORD, 1)
 
 
-def instalar(na_area_de_trabalho: bool = True, progresso=lambda texto, pct: None) -> None:
+def instalar(na_area_de_trabalho: bool = True, progresso=lambda texto, pct: None) -> list[str]:
+    """Instala e devolve avisos de etapas opcionais que falharam (atalhos, registro)."""
     progresso("Removendo versão anterior...", 5)
     if APP_DIR.exists():
         try:
@@ -158,11 +159,24 @@ def instalar(na_area_de_trabalho: bool = True, progresso=lambda texto, pct: None
         for arquivo in EXTRAS.iterdir():
             shutil.copy2(arquivo, DOCS_DIR / arquivo.name)
 
+    # Atalhos e registro são opcionais: se a política da máquina bloquear o
+    # PowerShell ou o registro, o robô continua instalado e utilizável.
+    avisos: list[str] = []
     progresso("Criando atalhos (pode levar até 1 minuto)...", 90)
-    atalhos = criar_atalhos(na_area_de_trabalho)
+    try:
+        atalhos = criar_atalhos(na_area_de_trabalho)
+    except Exception as erro:  # noqa: BLE001
+        atalhos = []
+        avisos.append(f"Os atalhos não puderam ser criados ({erro}).\n"
+                      f"Abra o robô direto por: {EXE}\n(offline: acrescente --offline)")
     escrever_desinstalador(atalhos)
-    registrar_desinstalacao()
-    progresso("Instalação concluída!", 100)
+    try:
+        registrar_desinstalacao()
+    except OSError as erro:
+        avisos.append(f"Não foi possível registrar em Aplicativos instalados ({erro}).\n"
+                      f"Para desinstalar, use {APP_DIR / 'desinstalar.cmd'}")
+    progresso("Instalação concluída!" if not avisos else "Instalação concluída, com avisos.", 100)
+    return avisos
 
 
 def abrir_robo() -> None:
@@ -175,11 +189,13 @@ def abrir_robo() -> None:
 
 def modo_silencioso() -> int:
     try:
-        instalar(na_area_de_trabalho="--sem-atalho-desktop" not in sys.argv,
-                 progresso=lambda texto, pct: print(f"[{pct:3d}%] {texto}"))
+        avisos = instalar(na_area_de_trabalho="--sem-atalho-desktop" not in sys.argv,
+                          progresso=lambda texto, pct: print(f"[{pct:3d}%] {texto}"))
     except Exception as erro:  # noqa: BLE001
         print(f"ERRO: {erro}")
         return 1
+    for aviso in avisos:
+        print(f"AVISO: {aviso}")
     print(f"Instalado em {APP_DIR}")
     return 0
 
@@ -236,7 +252,7 @@ def modo_janela() -> int:
     def atualizar(texto: str, pct: int) -> None:
         janela.after(0, lambda: (status.config(text=texto), barra.config(value=pct)))
 
-    def concluir(erro: Exception | None) -> None:
+    def concluir(erro: Exception | None, avisos: list[str] | None = None) -> None:
         if erro:
             status.config(text="A instalação não foi concluída.", fg="#B00020")
             btn_instalar.config(state="normal", text="Tentar de novo")
@@ -246,14 +262,16 @@ def modo_janela() -> int:
         btn_fechar.config(state="normal", text="Fechar")
         btn_instalar.config(state="normal", text="Abrir o Robô Selic",
                             command=lambda: (abrir_robo(), janela.destroy()))
+        if avisos and not os.environ.get("OFICINA_AUTOTESTE"):
+            messagebox.showwarning(NOME, "O Robô Selic foi instalado.\n\n" + "\n\n".join(avisos))
 
     def trabalho() -> None:
         try:
-            instalar(var_desktop.get(), atualizar)
+            avisos = instalar(var_desktop.get(), atualizar)
         except Exception as erro:  # noqa: BLE001 - mostrar qualquer falha para quem instala
             janela.after(0, concluir, erro)
         else:
-            janela.after(0, concluir, None)
+            janela.after(0, concluir, None, avisos)
 
     def iniciar() -> None:
         btn_instalar.config(state="disabled")
